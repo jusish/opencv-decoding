@@ -33,7 +33,7 @@ def decode_pdf417(image_path):
 
 if __name__ == "__main__":
     try:
-        result = decode_pdf417("IMG_1903_2.jpg")
+        result = decode_pdf417("image1_pdf417.jpg")
         print(f"Decoded Data: \n{result}")
     except Exception as e:
         print(f"Error: {str(e)}")
