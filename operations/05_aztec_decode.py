@@ -1,33 +1,36 @@
-from pyzbar.pyzbar import decode
 import cv2
+from pyzbar.pyzbar import decode
 import numpy as np
+import zxing
 
-# Load the image
-image_path = "image5.jpg"  # Replace with your image path
+# Initialize the ZXing reader
+reader = zxing.BarCodeReader()
+
+# Load the Aztec code image
+image_path = "image5_aztec.png"  # Replace with your image path
 image = cv2.imread(image_path)
-if image is None:
-    print("Error: Image not loaded. Check the image path.")
-    exit(1)
 
-# Decode the Aztec code using pyzbar
-decoded_objects = decode(image)
+# Decode the Aztec code using ZXing
+decoded = reader.decode(image_path)
 
-if decoded_objects:
-    for obj in decoded_objects:
-        print(f"Decoded Data: {obj.data.decode('utf-8')}")
-        print(f"Barcode Format: {obj.type}")
+# Check if the Aztec code was successfully decoded
+if decoded:
+    print(f"Decoded Data: {decoded.parsed}")
+    print(f"Barcode Format: {decoded.format}")
 
-        # Get points and draw bounding box
-        points = obj.polygon
-        if len(points) == 4:
-            pts = np.array(points, dtype=np.int32).reshape((-1, 1, 2))
-            cv2.polylines(image, [pts], isClosed=True, color=(0, 255, 0), thickness=2)
+    # Check if points are available
+    if hasattr(decoded, "points") and decoded.points:
+        try:
+            points = np.array(decoded.points, dtype=np.int32).reshape((-1, 1, 2))  # Ensure proper shape
+            cv2.polylines(image, [points], isClosed=True, color=(0, 255, 0), thickness=2)
 
-            # Annotate with the decoded text
-            x, y = points[0]
-            cv2.putText(image, obj.data.decode('utf-8'), (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            # Annotate the decoded data beside the bounding box
+            x, y = points[0][0]  # Extract x, y coordinates
+            cv2.putText(image, decoded.parsed, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+        except Exception as e:
+            print(f"Error processing bounding box: {e}")
 
-    # Display the image with annotations
+    # Display the image with the Aztec code highlighted and annotated
     cv2.imshow("Aztec Code with Annotation", image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
